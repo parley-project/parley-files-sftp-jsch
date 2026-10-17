@@ -30,7 +30,7 @@ permissions, and random access *reading* (mode `"r"`), including at any position
 with `setLength` works too.
 
 If your application writes at positions, use another provider, such as parley-ssh's
-(`parley-files-sftp-parley`) or Apache MINA SSHD's (`parley-files-sftp-mina`).
+(`parley-files-sftp-parley-ssh`) or Apache MINA SSHD's (`parley-files-sftp-mina`).
 
 ## Other notes
 

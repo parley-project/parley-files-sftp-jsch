@@ -86,7 +86,7 @@ class JschSftpFile implements SftpFile {
 		throw new IOException("The jsch SSH provider can't write at a position (writing at "+position+" in "+path
 				+"): JSch has no call for it, and emulating one can put the data in the wrong place if the file"
 				+" changes size meanwhile. Use another provider for random access writing, such as parley"
-				+" (us.bringardner.parley:parley-files-sftp-parley, implementation=parley).");
+				+" (us.bringardner.parley:parley-files-sftp-parley-ssh, implementation=parley).");
 	}
 
 	@Override

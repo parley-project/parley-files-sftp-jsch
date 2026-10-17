@@ -101,7 +101,7 @@ public class JschAloneTest {
 				e = assertThrows(IOException.class, () -> r.write(7), "the write itself fails");
 			}
 			assertTrue(e.getMessage().contains("can't write at a position"), e.getMessage());
-			assertTrue(e.getMessage().contains("parley-files-sftp-parley"), e.getMessage());
+			assertTrue(e.getMessage().contains("parley-files-sftp-parley-ssh"), e.getMessage());
 		} finally {
 			f.disConnect();
 		}

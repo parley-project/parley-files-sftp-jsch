@@ -25,7 +25,7 @@ import us.bringardner.parley.files.sftp.spi.SshSettings;
  * <b>Limitation: no writing at a position.</b> JSch's API has no positional write, so random
  * access writing (a random access stream opened "rw", "rws" or "rwd" that writes) throws an
  * IOException at the write. Everything else works, including reading at a position. Use another
- * provider, such as parley's (parley-files-sftp-parley), if the application writes at positions.
+ * provider, such as parley's (parley-files-sftp-parley-ssh), if the application writes at positions.
  */
 public class JschProvider implements SshProvider {
 
