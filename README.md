@@ -37,6 +37,17 @@ If your application writes at positions, use another provider, such as parley-ss
 - JSch logs in with a password, a private key (file or contents) or an ssh-agent (`auth=Agent`).
 - Ed25519 keys work on Java 11 and later.
 
+
+## Locks and FileChannel
+
+As parley-files-sftp describes (`PROCESS` locks, `map()` of a local copy), with two differences:
+
+- **Atomic `createNewFile()`.** JSch can't send SFTP's exclusive-create flag, so the file is written empty under a
+  name of its own and given the path by a hard link (`hardlink@openssh.com`) or, on a server without OpenSSH's
+  replacing rename, by a plain rename; the server refuses either if the path is taken, so of several racing callers
+  one wins. A server with the replacing rename but no hard links gets the old check-then-create, which isn't atomic.
+- **`force()` only sends the data.** JSch can't send `fsync@openssh.com`, so the server isn't asked to sync.
+
 ## Testing
 
 `mvn verify` runs parley-files-sftp's provider test suite against this provider (the tests jar, through
