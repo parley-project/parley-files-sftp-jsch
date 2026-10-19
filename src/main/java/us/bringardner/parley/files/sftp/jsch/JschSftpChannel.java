@@ -242,11 +242,24 @@ class JschSftpChannel implements SftpChannel {
 	/** The size of a write request JSch's stream sends, at most. */
 	private static final int WRITE_BUFFER = 32 * 1024;
 
+	/** OpenSSH's extension for hard links, which JSch can send. */
+	private static final String HARDLINK = "hardlink@openssh.com";
+	/** OpenSSH's replacing rename, which JSch's rename() uses whenever the server offers it. */
+	private static final String POSIX_RENAME = "posix-rename@openssh.com";
+
 	/**
-	 * JSch's public API can't send SFTP's exclusive-create flag, so this
-	 * checks first and then opens with APPEND, which creates the file but
-	 * never truncates it (CREAT without TRUNC). If another program creates
-	 * the file in between, its contents are kept and this returns true.
+	 * Creates the file only if nothing is at the path, atomically, as FileSource's contract requires.
+	 * JSch's public API can't send SFTP's exclusive-create flag, so this writes an empty file under a
+	 * name of its own and gives it the path with a step the server refuses if something is there,
+	 * so of several racing callers exactly one wins:
+	 * <ul>
+	 * <li>a hard link ({@value #HARDLINK}), then the temporary name is removed; or, without it,</li>
+	 * <li>a plain SFTP rename, which fails if the target exists, on a server that doesn't offer
+	 * {@value #POSIX_RENAME} (JSch would use that, and it replaces).</li>
+	 * </ul>
+	 * A server that offers the replacing rename but no hard links gets the old way, which isn't
+	 * atomic: check, then open with APPEND (CREAT without TRUNC, so a file another program made in
+	 * between is kept, and this returns true).
 	 */
 	@Override
 	public boolean createNew(String path) throws IOException {
@@ -256,8 +269,47 @@ class JschSftpChannel implements SftpChannel {
 		} catch (NoSuchFileException e) {
 			// nothing there yet
 		}
-		call(path, () -> sftp.put(path, ChannelSftp.APPEND)).close();
-		return true;
+		boolean link = sftp.getExtension(HARDLINK) != null;
+		if( !link && sftp.getExtension(POSIX_RENAME) != null ) {
+			call(path, () -> sftp.put(path, ChannelSftp.APPEND)).close();
+			return true;
+		}
+		String tmp = temporaryNameBeside(path);
+		call(tmp, () -> sftp.put(tmp, ChannelSftp.OVERWRITE)).close();
+		boolean moved = false;
+		try {
+			if( link ) {
+				hardlink(tmp, path);
+			} else {
+				rename(tmp, path);
+				moved = true;
+			}
+			return true;
+		} catch (IOException e) {
+			try {
+				lstat(path);
+				return false; // another caller made it first
+			} catch (NoSuchFileException gone) {
+				e.addSuppressed(gone);
+				throw e; // something else is wrong
+			}
+		} finally {
+			if( !moved ) {
+				try {
+					remove(tmp);
+				} catch (IOException e) {
+					// a stray empty temporary file; nothing depends on it
+				}
+			}
+		}
+	}
+
+	/** ".name.random.new" in the same directory, so the link stays on one file system. */
+	private static String temporaryNameBeside(String path) {
+		int slash = path.lastIndexOf('/');
+		String dir = slash < 0 ? "" : path.substring(0, slash + 1);
+		String name = path.substring(slash + 1);
+		return dir + "." + name + "." + Long.toHexString(java.util.concurrent.ThreadLocalRandom.current().nextLong() & Long.MAX_VALUE) + ".new";
 	}
 
 	@Override
