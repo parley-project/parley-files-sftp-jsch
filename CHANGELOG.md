@@ -9,6 +9,7 @@
   refuses if something is there: a hard link (`hardlink@openssh.com`), or a plain SFTP rename on a server
   without `posix-rename@openssh.com`. Only a server with the replacing rename but no hard links still gets
   the old check-then-create.
+- `sync()` (FileChannel.force()) only sends what is held: JSch can't send `fsync@openssh.com`.
 
 ## parley-files-sftp-jsch 1.0.0 (2026-10-17)
 
