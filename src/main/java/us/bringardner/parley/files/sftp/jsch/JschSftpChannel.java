@@ -261,6 +261,15 @@ class JschSftpChannel implements SftpChannel {
 	 * atomic: check, then open with APPEND (CREAT without TRUNC, so a file another program made in
 	 * between is kept, and this returns true).
 	 */
+	/**
+	 * Atomic unless the server offers the replacing rename but no hard links (see
+	 * {@link #createNew(String)}).
+	 */
+	@Override
+	public boolean createNewIsAtomic() throws IOException {
+		return sftp.getExtension(HARDLINK) != null || sftp.getExtension(POSIX_RENAME) == null;
+	}
+
 	@Override
 	public boolean createNew(String path) throws IOException {
 		try {

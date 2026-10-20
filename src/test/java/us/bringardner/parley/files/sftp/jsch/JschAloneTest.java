@@ -65,6 +65,18 @@ public class JschAloneTest {
 		return f;
 	}
 
+	/** The capabilities say what JSch's createNew is with this server (atomic, or not promised). */
+	@Test
+	void capabilitiesTellWhetherCreateIsAtomic() throws IOException {
+		SftpFileSourceFactory f = connect();
+		try {
+			boolean atomic = f.createNewIsAtomic();
+			assertEquals(atomic, f.createFileSource("/").getCapabilities().atomicCreateNewFile());
+		} finally {
+			f.disConnect();
+		}
+	}
+
 	@Test
 	void jschIsTheOnlyProviderAndIsUsed() throws IOException {
 		assertEquals(java.util.Collections.singleton(JschProvider.NAME), SshProviders.available().keySet());

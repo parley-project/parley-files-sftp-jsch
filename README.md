@@ -45,7 +45,7 @@ As parley-files-sftp describes (`PROCESS` locks, `map()` of a local copy), with 
 - **Atomic `createNewFile()`.** JSch can't send SFTP's exclusive-create flag, so the file is written empty under a
   name of its own and given the path by a hard link (`hardlink@openssh.com`) or, on a server without OpenSSH's
   replacing rename, by a plain rename; the server refuses either if the path is taken, so of several racing callers
-  one wins. A server with the replacing rename but no hard links gets the old check-then-create, which isn't atomic.
+  one wins. A server with the replacing rename but no hard links gets the old check-then-create, which isn't atomic. `getCapabilities()` then says so (`atomicCreateNewFile()` is false), so code that needs an atomic create, like parley-net's locks, doesn't count on it.
 - **`force()` only sends the data.** JSch can't send `fsync@openssh.com`, so the server isn't asked to sync.
 
 ## Testing
