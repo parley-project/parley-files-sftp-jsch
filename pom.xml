@@ -60,6 +60,11 @@
 					<dependenciesToScan>
 						<dependency>us.bringardner.parley:parley-files-sftp</dependency>
 					</dependenciesToScan>
+					<!-- The suite's temporary folders go in target/, a path with no symbolic links in it. On macOS
+					     the default one is under /var, a link to private/var, and the embedded test server's readlink
+					     can't follow a relative link, so SftpCanonicalPathTest fails there. java.io.tmpdir is only
+					     read when the JVM starts, so it has to be set here and not in systemPropertyVariables. -->
+					<argLine>-Djava.io.tmpdir=${project.build.directory}</argLine>
 					<systemPropertyVariables>
 						<!-- What this library can't do (see the README): the suite skips those tests;
 						     this project's own tests check that the provider refuses them. -->
