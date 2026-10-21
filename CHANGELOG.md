@@ -1,6 +1,6 @@
 # Changelog
 
-## parley-files-sftp-jsch 1.0.0 (2026-10-17)
+## parley-files-sftp-jsch 1.0.0 (2026-10-21)
 
 The first release. The JSch provider for parley-files-sftp. It was part of parley-files-sftp (package
 `us.bringardner.parley.files.sftp.client.jsch`, before that BjlFileSystemSftp's
