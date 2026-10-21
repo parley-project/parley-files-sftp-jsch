@@ -12,7 +12,7 @@ The [JSch](https://github.com/mwiede/jsch) provider for
 ```
 
 It brings parley-files-sftp with it. On the class path it is used when it is the only provider there, or when it is chosen: the
-`implementation` connection property or `-Dparley.sftp.implementation=jsch`.
+`implementation` connection property or `-Dparley.files.sftp.implementation=jsch`.
 
 ## Limitation: no writing at a position
 
@@ -51,5 +51,5 @@ As parley-files-sftp describes (`PROCESS` locks, `map()` of a local copy), with 
 ## Testing
 
 `mvn verify` runs parley-files-sftp's provider test suite against this provider (the tests jar, through
-surefire's `dependenciesToScan`), with `parley.sftp.test.unsupported=writeAtPosition` in the pom: the suite skips what the library can't do, and this project's own tests: that JSch alone on the class path is used, reads, and refuses a write at a position (`JschAloneTest`), and that opening a file sends no extra request (`JschOpenSendsNoStatTest`). See "Testing a provider" in parley-files-sftp's README; the
-suite's server is chosen with `-Dparley.sftp.test.server` as described there.
+surefire's `dependenciesToScan`), with `parley.files.sftp.test.unsupported=writeAtPosition` in the pom: the suite skips what the library can't do, and this project's own tests: that JSch alone on the class path is used, reads, and refuses a write at a position (`JschAloneTest`), and that opening a file sends no extra request (`JschOpenSendsNoStatTest`). See "Testing a provider" in parley-files-sftp's README; the
+suite's server is chosen with `-Dparley.files.sftp.test.server` as described there.

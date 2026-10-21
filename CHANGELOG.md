@@ -1,5 +1,12 @@
 # Changelog
 
+## parley-files-sftp-jsch 2.0.0 (unreleased)
+
+### Changed (needs a configuration change)
+
+- The provider is chosen with `parley.files.sftp.implementation=jsch` (was `parley.sftp.implementation`),
+  and the shared suite's settings are `parley.files.sftp.test.*`.
+
 ## parley-files-sftp-jsch 1.1.0 (unreleased)
 
 ### Changed (no code change needed)

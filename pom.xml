@@ -68,7 +68,7 @@
 					<systemPropertyVariables>
 						<!-- What this library can't do (see the README): the suite skips those tests;
 						     this project's own tests check that the provider refuses them. -->
-						<parley.sftp.test.unsupported>writeAtPosition</parley.sftp.test.unsupported>
+						<parley.files.sftp.test.unsupported>writeAtPosition</parley.files.sftp.test.unsupported>
 					</systemPropertyVariables>
 				</configuration>
 			</plugin>
