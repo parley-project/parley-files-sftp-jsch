@@ -2,6 +2,12 @@
 
 ## parley-files-sftp-jsch 2.0.0 (unreleased)
 
+### Changed (2026-11-06: parley-ssh's server logs in users of a parley-iam registry)
+
+- **The test `JschAloneTest` gives its parley-ssh server a user registry** (parley-net's `FileUserRegistry`, with
+  the test's user, its password and the `sftp` permission) in place of the password authenticator and
+  `SshPrincipal`, which parley-ssh 2.0.0 removed. Tests only; nothing in this module's code changed.
+
 ### Changed (needs a configuration change)
 
 - The provider is chosen with `parley.files.sftp.implementation=jsch` (was `parley.sftp.implementation`),

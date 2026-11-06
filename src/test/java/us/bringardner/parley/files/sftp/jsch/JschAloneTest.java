@@ -21,8 +21,8 @@ import us.bringardner.parley.files.FileSourceFactory;
 import us.bringardner.parley.files.IRandomAccessStream;
 import us.bringardner.parley.files.sftp.SftpFileSourceFactory;
 import us.bringardner.parley.files.sftp.spi.SshProviders;
+import us.bringardner.parley.net.server.FileUserRegistry;
 import us.bringardner.parley.ssh.server.HostKeyProviders;
-import us.bringardner.parley.ssh.server.SshPrincipal;
 import us.bringardner.parley.ssh.server.SshServer;
 import us.bringardner.parley.ssh.sftp.server.SftpSubsystemFactory;
 
@@ -37,10 +37,20 @@ public class JschAloneTest {
 
 	@BeforeAll
 	static void start() throws Exception {
-		File root = Files.createTempDirectory("parley-sftp-jsch-test").toFile();
+		File dir = Files.createTempDirectory("parley-sftp-jsch-test").toFile();
+		File root = new File(dir, "root");
+		assertTrue(root.mkdirs());
+
+		// the user: parley-ssh 2.0.0 logs in only users its parley-iam registry knows, with the
+		// registry checking the password; sftp is the subsystem's permission
+		File users = new File(dir, "users");
+		Files.write(users.toPath(), "jsch-test, secret, sftp\n".getBytes(StandardCharsets.UTF_8));
+		FileUserRegistry registry = new FileUserRegistry();
+		registry.initialize(users);
+
 		server = new SshServer(0);
+		server.setUserRegistry(registry);
 		server.setHostKeyProvider(HostKeyProviders.ephemeral());
-		server.setPasswordAuthenticator((user, pw, ctx) -> "secret".equals(new String(pw)) ? new SshPrincipal(user) : null);
 		server.addSubsystem(SftpSubsystemFactory.forRoot(FileSourceFactory.getDefaultFactory().createFileSource(root.getCanonicalPath())));
 		server.startAndWait(5000);
 	}
