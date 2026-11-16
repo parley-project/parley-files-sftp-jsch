@@ -2,15 +2,6 @@
 
 ## parley-files-sftp-jsch 2.0.0 (unreleased)
 
-### Added (2026-11-15: running programs on the server)
-
-- **`SshConnection.start(command)`**: a command that runs while its streams are read, for
-  parley-files-sftp's `processBuilder` (connection setting `runCommands`).
-  JSch reads every channel of a session on one thread, so a command whose output nobody reads stops the
-  session's other channels once JSch's buffer is full, and JSch doesn't report the signal that ended a
-  command (status 255). The exec channel's open, retried when the server refuses it for its channel limit,
-  is shared with `exec`.
-
 ### Changed (2026-11-06: parley-ssh's server logs in users of a parley-iam registry)
 
 - **The test `JschAloneTest` gives its parley-ssh server a user registry** (parley-net's `FileUserRegistry`, with
