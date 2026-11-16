@@ -88,12 +88,31 @@ class JschConnection implements SshConnection {
 			// fills stderr can't block while stdout is being read.
 			ByteArrayOutputStream err = new ByteArrayOutputStream();
 			InputStream stdOut;
-			InputStream[] output = new InputStream[1];
-			exec = openExec(command, channel -> {
-				channel.setErrStream(err, true);
-				output[0] = channel.getInputStream();
-			});
-			stdOut = output[0];
+			// Like openSftp(), retry a refused open for up to REFUSED_RETRY_MS: a
+			// channel closed just before (say, to make room for this command)
+			// may still count against the server's limit.
+			long giveUp = System.currentTimeMillis() + REFUSED_RETRY_MS;
+			long pause = 5;
+			while( true ) {
+				exec = (ChannelExec) session.openChannel("exec");
+				exec.setCommand(command);
+				exec.setErrStream(err, true);
+				stdOut = exec.getInputStream();
+				try {
+					exec.connect(timeoutMs);
+					break;
+				} catch (JSchException e) {
+					// a refusal leaves the server's reason code (1-4) as the exit status
+					boolean refused = exec.getExitStatus() > 0 && session.isConnected();
+					exec.disconnect();
+					exec = null;
+					if( !refused || System.currentTimeMillis() + pause > giveUp ) {
+						throw e;
+					}
+				}
+				Thread.sleep(pause);
+				pause = Math.min(pause * 2, 100);
+			}
 
 			// The time limit is enforced by closing the channel, which ends the
 			// read below. Reading until EOF used to come first, with no limit,
@@ -141,62 +160,6 @@ class JschConnection implements SshConnection {
 			if( exec != null ) {
 				exec.disconnect();
 			}
-		}
-	}
-
-	/** What is done to an exec channel before it is connected: JSch's streams are taken then. */
-	private interface BeforeConnect {
-		void prepare(ChannelExec channel) throws IOException;
-	}
-
-	/**
-	 * Opens an exec channel for command and connects it. Like openSftp(), a refused open is tried
-	 * again for up to REFUSED_RETRY_MS: a channel closed just before (say, to make room for this
-	 * command) may still count against the server's limit.
-	 */
-	private ChannelExec openExec(String command, BeforeConnect beforeConnect) throws IOException, JSchException, InterruptedException {
-		long giveUp = System.currentTimeMillis() + REFUSED_RETRY_MS;
-		long pause = 5;
-		while( true ) {
-			ChannelExec channel = (ChannelExec) session.openChannel("exec");
-			channel.setCommand(command);
-			beforeConnect.prepare(channel);
-			try {
-				channel.connect(timeoutMs);
-				return channel;
-			} catch (JSchException e) {
-				// a refusal leaves the server's reason code (1-4) as the exit status
-				boolean refused = channel.getExitStatus() > 0 && session.isConnected();
-				channel.disconnect();
-				if( !refused || System.currentTimeMillis() + pause > giveUp ) {
-					throw e;
-				}
-			}
-			Thread.sleep(pause);
-			pause = Math.min(pause * 2, 100);
-		}
-	}
-
-	@Override
-	public Process start(String command) throws IOException {
-		InputStream[] streams = new InputStream[2];
-		ChannelExec channel;
-		try {
-			channel = openExec(command, c -> {
-				streams[0] = c.getInputStream();
-				streams[1] = c.getExtInputStream();
-			});
-		} catch (JSchException e) {
-			throw new IOException(e.getMessage(), e);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new java.io.InterruptedIOException("Interrupted while starting: "+command);
-		}
-		try {
-			return new JschProcess(channel, channel.getOutputStream(), streams[0], streams[1]);
-		} catch (IOException | RuntimeException e) {
-			channel.disconnect();
-			throw e;
 		}
 	}
 
