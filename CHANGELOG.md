@@ -2,6 +2,11 @@
 
 ## parley-files-sftp-jsch 2.0.0 (unreleased)
 
+### Documented (2026-11-19: symbolic links, D78)
+
+- **The README states that this provider can't set a link's own owner, group or times**, because JSch can't send
+  `lsetstat@openssh.com`. The setters return `false` and leave the link's file unchanged. No code changed.
+
 ### Changed (2026-11-06: parley-ssh's server logs in users of a parley-iam registry)
 
 - **The test `JschAloneTest` gives its parley-ssh server a user registry** (parley-net's `FileUserRegistry`, with

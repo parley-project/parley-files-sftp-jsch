@@ -32,6 +32,22 @@ with `setLength` works too.
 If your application writes at positions, use another provider, such as parley-ssh's
 (`parley-files-sftp-parley-ssh`) or Apache MINA SSHD's (`parley-files-sftp-mina`).
 
+## Limitation: can't set a symbolic link's own owner, group or times
+
+On Linux and macOS a symbolic link has its own owner, group and times, and `chown -h` and `touch -h` change
+the link rather than its file. Over SFTP that takes OpenSSH's `lsetstat@openssh.com` extension, and
+**JSch has no public way to send an extended request**, so this provider can't use it. A plain SETSTAT
+always follows the link and would change the file the link leads to, so this provider doesn't send it for a link.
+Instead, `setOwner`, `setGroup`, `setLastModifiedTime` and `setLastAccessTime` on a link return `false` and
+change nothing, and the link's target is left alone.
+
+Everything that reads a link works: owner, group, times, permission bits and length are the link's own (from
+LSTAT), as they are with the other providers. Changing permissions follows the link to its file, as `chmod` does.
+
+If your application sets a link's own owner or times, use another provider, such as parley-ssh's
+(`parley-files-sftp-parley-ssh`) or Apache MINA SSHD's (`parley-files-sftp-mina`), against a server that offers
+the extension (OpenSSH, MINA and parley-ssh's server do).
+
 ## Other notes
 
 - JSch logs in with a password, a private key (file or contents) or an ssh-agent (`auth=Agent`).
